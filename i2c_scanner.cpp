@@ -1,48 +1,69 @@
+// SPDX-FileCopyrightText: 2023 Carter Nelson for Adafruit Industries
+//
+// SPDX-License-Identifier: MIT
+// --------------------------------------
+// i2c_scanner
+//
+// Modified from https://playground.arduino.cc/Main/I2cScanner/
+// --------------------------------------
+
 #include <Wire.h>
-#include <stdio.h>
-#include "sdkconfig.h"
 #include <Arduino.h>
-#include <WiFi.h>
+
+#define SDA 36
+#define SCL 37
+
+
+// Set I2C bus to use: Wire, Wire1, etc.
+#define WIRE Wire
 
 void setup() {
-  Wire.begin();
+  WIRE.begin(SDA, SCL);
 
   Serial.begin(115200);
-  while (!Serial);
-  delay(2000);
-
+  while (!Serial)
+     delay(10);
   Serial.println("\nI2C Scanner");
 }
 
+
 void loop() {
   byte error, address;
-  int devices = 0;
+  int nDevices;
 
   Serial.println("Scanning...");
 
-  for (address = 1; address < 127; address++) {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
+  nDevices = 0;
+  for(address = 1; address < 127; address++ )
+  {
+    // The i2c_scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    WIRE.beginTransmission(address);
+    error = WIRE.endTransmission();
 
-    if (error == 0) {
-      Serial.print("Device found at address 0x");
-      if (address < 16) Serial.print("0");
-      Serial.println(address, HEX);
-      devices++;
+    if (error == 0)
+    {
+      Serial.print("I2C device found at address 0x");
+      if (address<16)
+        Serial.print("0");
+      Serial.print(address,HEX);
+      Serial.println("  !");
+
+      nDevices++;
     }
-    else if (error == 4) {
+    else if (error==4)
+    {
       Serial.print("Unknown error at address 0x");
-      if (address < 16) Serial.print("0");
-      Serial.println(address, HEX);
+      if (address<16)
+        Serial.print("0");
+      Serial.println(address,HEX);
     }
   }
-
-  if (devices == 0) {
+  if (nDevices == 0)
     Serial.println("No I2C devices found\n");
-  }
-  else {
-    Serial.println("Done\n");
-  }
+  else
+    Serial.println("done\n");
 
-  delay(5000);  // Wait 5 seconds before scanning again
+  delay(5000);           // wait 5 seconds for next scan
 }
